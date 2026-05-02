@@ -1,6 +1,7 @@
 {
-  "name": "Square Voice Tiles",
-  "description": "Sesli arama kutucuklarını kare yapar",
-  "author": "SeninAdın",
-  "version": "1.0.0"
+  "name": "SquareVoice",
+  "description": "Ses kanallarını kare yapar, kameraları büyütür.",
+  "authors": [{ "name": "Gemini", "id": "0" }],
+  "main": "index.js",
+  "hash": "square-1"
 }
