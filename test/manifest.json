@@ -2,6 +2,6 @@
   "name": "SquareVoice",
   "description": "Ses kanallarını kare yapar, kameraları büyütür.",
   "authors": [{ "name": "Gemini", "id": "0" }],
-  "main": "index.js",
+  "main": "voicetiles.js",
   "hash": "square-1"
 }
