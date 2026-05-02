@@ -1,40 +1,51 @@
-const { metro } = vendetta;
-const { findByProps } = metro;
+const { metro, patcher } = vendetta;
+const { findByProps, findByName } = metro;
 
-// Gerekli stil ve bileşenleri bulalım
-const VoiceTile = findByProps("VoiceUserTile");
-const Styles = findByProps("tile", "videoTile");
+let unpatch;
 
 export default {
-    name: "SquareVoiceBigCamera",
-    description: "Ses kutucuklarını kare yapar, kamera açanları büyütür.",
-    authors: [{ name: "Gemini", id: "0" }],
-    version: "1.0.0",
+    onLoad: () => {
+        // Metro üzerinden Discord'un sesli sohbet kutucuğu bileşenini buluyoruz
+        const VoiceTile = findByProps("VoiceUserTile") || findByName("VoiceUserTile") || findByProps("VoiceUser");
 
-    onStart() {
-        // Stil üzerine yama (patch) atıyoruz
-        this.patch = vendetta.patcher.after("render", VoiceTile, ([props], res) => {
-            const isVideo = props.video || props.stream;
+        if (!VoiceTile) {
+            console.error("[SquareVoice] Metro Modülü Bulunamadı: VoiceUserTile");
+            return;
+        }
 
-            // Kutucuk stillerine müdahale
-            if (res?.props?.style) {
-                if (isVideo) {
-                    // Kamera açanlar: Büyük ve 16:9 oranında
-                    res.props.style.width = "100%";
-                    res.props.style.aspectRatio = 16 / 9;
-                    res.props.style.borderRadius = 12;
-                } else {
-                    // Normal kullanıcılar: Kare
-                    res.props.style.aspectRatio = 1;
-                    res.props.style.width = "48%"; // Yan yana iki kare için
-                    res.props.style.borderRadius = 8;
+        // Bileşenin varsayılan render çıktısına yama yapıyoruz
+        unpatch = patcher.after("default", VoiceTile, (args, res) => {
+            try {
+                // Katılımcının özelliklerini al (kamera, yayın vs.)
+                const props = args[0] || {};
+                const isVideo = props.video || props.stream || props.hasVideo;
+
+                // Stilleri Vendetta üzerinden manipüle et
+                if (res && res.props && res.props.style) {
+                    if (isVideo) {
+                        // Kamera/Yayın: Geniş ekran (16:9) ve tam satır
+                        res.props.style.aspectRatio = 16 / 9;
+                        res.props.style.width = "100%";
+                        res.props.style.borderRadius = 12;
+                    } else {
+                        // Normal Ses: Kare (1:1) ve yan yana sığması için %48 genişlik
+                        res.props.style.aspectRatio = 1;
+                        res.props.style.width = "48%"; 
+                        res.props.style.borderRadius = 8;
+                    }
                 }
+            } catch (err) {
+                console.error("[SquareVoice] Stil uygulanırken hata:", err);
             }
+            
             return res;
         });
     },
 
-    onStop() {
-        this.patch?.();
+    onUnload: () => {
+        // Eklenti kapatıldığında Vendetta yamalarını geri al
+        if (unpatch) {
+            unpatch();
+        }
     }
 };
